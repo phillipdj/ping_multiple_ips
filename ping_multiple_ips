@@ -1,0 +1,35 @@
+import subprocess
+import pandas as pd
+
+def ping_ip(ip_address):
+    try:
+        output = subprocess.check_output(['ping', ip_address], stderr=subprocess.STDOUT, universal_newlines=True)
+        if "Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)," in output:
+            return True
+        else:
+            return False
+    except subprocess.CalledProcessError:
+        return False
+
+def ping_multiple_ips(ip_addresses):
+    results = {}
+    for ip in ip_addresses:
+        results[ip] = ping_ip(ip)
+    return results
+
+def get_ip_addresses_from_excel(file_path, sheet_name, column_name):
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    return df[column_name].dropna().tolist()
+
+if __name__ == "__main__":
+    file_path = 'ping_multiple_ips.xlsx'  # Path to your Excel file
+    sheet_name = 'ip_addresses'            # Name of the sheet in the Excel file
+    column_name = 'IP'               # Column name where IP addresses are stored
+
+    ip_addresses = get_ip_addresses_from_excel(file_path, sheet_name, column_name)
+    results = ping_multiple_ips(ip_addresses)
+    for ip, status in results.items():
+        if status:
+            print(f"{ip} is reachable")
+        else:
+            print(f"{ip} is not reachable")
